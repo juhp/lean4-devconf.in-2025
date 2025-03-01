@@ -23,17 +23,22 @@ def hello := "world"  -- String
 
 -- # Natural numbers
 
+-- GADT _(Generalized Algebraic Data Type)_
 inductive MyNat : Type where
   | zero : MyNat
   | succ : MyNat -> MyNat
 
 #check MyNat.succ (MyNat.succ MyNat.zero)
 
+example : MyNat := MyNat.zero.succ.succ
+example : MyNat := .succ MyNat.zero.succ.succ
+
 open MyNat in
 #check succ (succ zero)
 
+-- # Universes of types
 
--- # Propositions and Equality types
+example: Type := Nat
 
 -- There is a hierarchy of Type Universes
 -- (to avoid Russell's paradox)
@@ -47,15 +52,20 @@ open MyNat in
 example : Type := Prop
 example : Type (n+1) := Type n
 
-def oneplusonetwo := 1 + 1 = 2  -- an Equality type!
+-- # Propositions and Equality types
 
-#check oneplusonetwo
+-- Equality types
+#check 2 = 2
 
-theorem twice_is_two : Eq (1+1) 2 := Eq.refl 2
+#check Nat = Nat
+#check Eq (1+1) 2 = (1 + 1 = 2)
+
+theorem one_plus_one_is_two : 1 + 1 = 2 := Eq.refl 2
 
 theorem two_is_two : Eq 2 2 := by rfl  -- proof by a Tactic
 
 -- Note propositions (including Eq types) cannot be evaluated
+
 
 -- # Positive Integers (first example of a dependent type)
 
@@ -68,15 +78,16 @@ def pos : Pos := ⟨1, by simp⟩
 
 -- # MyFin
 
+-- index family of (dependent) types
 structure MyFin (n : Nat) where
   val  : Nat
   isLt : val < n
 
--- Finite 0 is empty (uninhabited)
--- 0 : Finite 1
--- 0, 1 : Finite 2
--- 0, 1, 2 : Finite 3
--- 0, 1, 2, 3 : Finite 4
+-- MyFin 0 is empty (uninhabited)
+-- 0 : MyFin 1
+-- 0, 1 : MyFin 2
+-- 0, 1, 2 : MyFin 3
+-- 0, 1, 2, 3 : MyFin 4
 -- :... etc
 
 #eval (⟨5,by decide⟩ : MyFin 8)
@@ -92,7 +103,7 @@ structure MyFin (n : Nat) where
 def size : Nat := 4
 def three_of n := Fin.ofNat' (n+1) 2
 
-#eval s!"This is {three_of size + 1} out of {size}"
+#eval IO.println s!"This is {three_of size + 1} out of {size}"
 
 
 -- # Option type
@@ -101,6 +112,7 @@ example : Option Char := some 'a'
 
 example : Option a := none  -- polymorphic
 
+#print Option
 
 -- # Lists!
 
@@ -111,7 +123,7 @@ inductive MyList (α : Type)  : Type where
 example : MyList α := .nil
 example : MyList Nat := .cons 1 .nil
 
-example : List Bool := cons true (cons false nil)
+example : List Bool := .cons true (.cons false .nil)
 example : List Bool := [true, false]
 
 -- finally a function!!
@@ -123,14 +135,18 @@ def MyList.length : MyList α -> Nat
 
 def ls := [1,2,3]
 
-#eval ls.head
+#eval ls.head?
+#eval ([] : List Char).head?
+#eval ls.tail
 #eval ls[3]?
+#eval ls.map (· * 2)  -- fun n => n * 2
 
-#eval ls.map (· * 2)
+#eval [1,2] ++ [3,4]
+#eval [1,2].append [3,4,5]
 
 -- # Vectors (sized lists)  (dependent!)
--- Indexed Families
 
+-- Indexed Families
 inductive Vect (α : Type) : Nat → Type where
    | nil : Vect α 0
    | cons : α → Vect α n → Vect α (n + 1)
@@ -147,6 +163,8 @@ def Vect.replicate (n : Nat) (x : α) : Vect α n :=
 
 #eval Vect.replicate 2 'a'
 
+
+
 def Vect.zip : Vect α n → Vect β n → Vect (α × β) n
   | .nil, .nil => .nil
   | .cons x xs, .cons y ys => .cons (x, y) (zip xs ys)
@@ -155,17 +173,18 @@ def Vect.zip : Vect α n → Vect β n → Vect (α × β) n
 
 -- # Array
 
-def ar2 := #[1,2]
-def i : MyFin (ar2.size) := ⟨1, by decide⟩
+def arr := #[1,2,3]
 
-#eval ar2.size
+#eval arr.size
+#eval arr[2]
 
 
-abbrev Array.inBounds (xs : Array α) (i : Nat) : Prop :=
-  i ≤ xs.size
+-- # Termination
+-- functions in Lean are Total: ie must terminate
 
-instance : GetElem (arr: Array.{u} α) (MyFin (arr.size)) α Array.inBounds where
-  getElem := Array.get
-
-def Array.get' (arr: Array α) : (i: MyFin arr.size) -> α :=
-  arr[i]
+-- Ackermann function
+def ackermann : Nat → Nat → Nat
+  | 0, m => m + 1
+  | n + 1, 0 => ackermann n 1
+  | n + 1, m + 1 => ackermann n (ackermann (n + 1) m)
+termination_by n m => (n, m)
