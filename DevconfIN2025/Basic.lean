@@ -1,3 +1,11 @@
+
+-- # Lambda functions
+
+example := fun x => x + 1
+
+#eval (fun x => x + 1) 2
+
+
 -- # Lean4 primitive types
 
 def num : Nat := 1  -- Natural number (>= 0)
