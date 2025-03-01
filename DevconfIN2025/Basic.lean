@@ -1,7 +1,10 @@
+-- # code in Lean4
 
 -- # Lambda functions
 
 example := fun x => x + 1
+
+example := (· + 1)
 
 #eval (fun x => x + 1) 2
 
@@ -36,7 +39,7 @@ inductive MyNat : Type where
   | zero : MyNat
   | succ : MyNat -> MyNat
 
-#check MyNat.succ (MyNat.succ MyNat.zero)
+#eval MyNat.succ (MyNat.succ MyNat.zero)
 
 example : MyNat := MyNat.zero.succ.succ
 example : MyNat := .succ MyNat.zero.succ.succ
@@ -169,7 +172,7 @@ def Vect.replicate (n : Nat) (x : α) : Vect α n :=
   | 0 => .nil
   | k + 1 => .cons x (replicate k x)
 
-#eval Vect.replicate 2 'a'
+#eval Vect.replicate 3 'a'
 
 
 
